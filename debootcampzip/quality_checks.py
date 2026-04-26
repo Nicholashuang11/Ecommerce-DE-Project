@@ -1,8 +1,3 @@
-"""
-quality_checks.py
-Runs assertions against the warehouse after each load.
-Exits with code 1 if any check fails — Airflow marks the task as failed.
-"""
 import logging
 import os
 import sys
