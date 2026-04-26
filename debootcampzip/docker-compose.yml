@@ -1,0 +1,121 @@
+version: "3.8"
+services:
+  # ===============================
+  # Airflow Metadata Database
+  # ===============================
+  airflow-postgres:
+    image: postgres:16
+    container_name: airflow-postgresdsarea
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5478:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+
+  # ===============================
+  # E-commerce Data Warehouse
+  # ===============================
+  commerce-postgres:
+    image: postgres:16
+    container_name: commerce-postgresdsarea
+    environment:
+      POSTGRES_USER: commerce
+      POSTGRES_PASSWORD: commerce
+      POSTGRES_DB: ecommerce_dw
+    volumes:
+      - commerce-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5475:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "commerce"]
+      interval: 5s
+      retries: 5
+
+  # ===============================
+  # pgAdmin
+  # ===============================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmindsarea
+    depends_on:
+      - airflow-postgres
+      - commerce-postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'True'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+  # ===============================
+  # Airflow Init (DB + Admin User)
+  # ===============================
+  airflow-init:
+    image: apache/airflow:2.8.0
+    container_name: airflow-init
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy   # FIX: wait for postgres to be ready
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com"
+    restart: "no"
+
+  # ===============================
+  # Airflow Webserver
+  # ===============================
+  airflow-webserver:
+    image: apache/airflow:2.8.0
+    container_name: airflow-webserver
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully  # FIX: wait for init to FINISH
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__WEB_SERVER_HOST: 0.0.0.0
+      AIRFLOW__WEBSERVER__WEB_SERVER_PORT: 8080
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    ports:
+      - "8081:8080"
+    command: airflow webserver
+    restart: on-failure
+
+  # ===============================
+  # Airflow Scheduler
+  # ===============================
+  airflow-scheduler:
+    image: apache/airflow:2.8.0
+    container_name: airflow-scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully  # FIX: wait for init to FINISH
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    command: airflow scheduler
+    restart: on-failure
+
+volumes:
+  airflow-postgres-data:
+  commerce-postgres-data:
+  pgadmin-data:
