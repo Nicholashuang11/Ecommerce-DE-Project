@@ -25,7 +25,7 @@ def connectdb():
 import numpy as np
 
 def to_native(val):
-    """Convert a single value to a Python native type."""
+
     if val is None:
         return None
     if isinstance(val, float) and (val != val):  
@@ -39,7 +39,7 @@ def to_native(val):
     return val
 
 def df_to_records(df: pd.DataFrame) -> list:
-    """Convert all rows to tuples of Python native types."""
+ 
     return [
         tuple(to_native(v) for v in row)
         for row in df.itertuples(index=False)
