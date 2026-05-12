@@ -1,7 +1,3 @@
-"""
-refresh_views.py
-Re-executes analytics_views.sql after every successful load.
-"""
 import logging
 import os
 
