@@ -2,11 +2,8 @@ Olist E-Commerce Data Engineering Pipeline
  
 An end-to-end data engineering pipeline built on the [Olist Brazilian E-Commerce dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce). This project simulates a real-world data warehouse pipeline — from raw CSV ingestion to analytics-ready views.
  
----
+Architecture
  
-## Architecture
- 
-```
 Raw CSVs (Olist Dataset)
         │
         ▼
@@ -27,19 +24,18 @@ Raw CSVs (Olist Dataset)
         ▼
   Analytics Views            analytics_views.sql
   (pre-aggregated KPIs       ───────────────────
-   for BI consumption)       Refreshed after every successful load
+   for analyst consumption)       Refreshed after every successful load
         │
         ▼
   Airflow DAG                pipeline.py
   (orchestrates all          ───────────
    steps on schedule)        
-```
+
  
----
+
  
-## Star Schema
+Star Schema
  
-```
                     dim_time
                        │
 dim_location ──── dim_customer
@@ -47,23 +43,21 @@ dim_location ──── dim_customer
 dim_location ──── dim_seller ──── fact_order ──── dim_product
                                        │
                                    dim_time (approved, delivered)
-```
+
  
 | Table | Description |
-|---|---|
-| `fact_order` | One row per order item — all measures (price, freight, payment, review) |
+| `fact_order` | One row per order item with all measures (price, freight, payment, review) |
 | `dim_customer` | Customer info linked to location via zip code |
 | `dim_seller` | Seller info linked to location via zip code |
 | `dim_product` | Product catalog with English category translation |
 | `dim_location` | Zip code, city, state, avg lat/lng from geolocation data |
 | `dim_time` | Full calendar breakdown from all order timestamps |
  
----
+
  
-## Tech Stack
+Tools 
  
 | Tool | Purpose |
-|---|---|
 | PySpark | Large-scale data transformation |
 | PostgreSQL | Data warehouse |
 | Apache Airflow | Pipeline orchestration and scheduling |
