@@ -11,10 +11,10 @@ logger = logging.getLogger("refresh_views")
 
 DB_CONFIG = {
     "host":     os.getenv("POSTGRES_HOST",     "localhost"),
-    "port":     int(os.getenv("POSTGRES_PORT", "5432")),
-    "dbname":   os.getenv("POSTGRES_DB",       "olist_dw"),
-    "user":     os.getenv("POSTGRES_USER",     "postgres"),
-    "password": os.getenv("POSTGRES_PASSWORD", "postgres"),
+    "port":     int(os.getenv("POSTGRES_PORT", "5475")),
+    "dbname":   os.getenv("POSTGRES_DB",       "ecommerce_dw"),
+    "user":     os.getenv("POSTGRES_USER",     "ecommerce"),
+    "password": os.getenv("POSTGRES_PASSWORD", "ecommerce"),
 }
 
 SQL_PATH =  "/opt/airflow/src/analytics_views.sql"
