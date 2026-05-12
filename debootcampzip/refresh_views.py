@@ -17,9 +17,8 @@ DB_CONFIG = {
     "password": os.getenv("POSTGRES_PASSWORD", "postgres"),
 }
 
-SQL_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "sql", "analytics_views.sql"
-)
+SQL_PATH =  "/opt/airflow/src/analytics_views.sql"
+
 
 
 def refresh():
