@@ -28,7 +28,7 @@ def to_native(val):
     """Convert a single value to a Python native type."""
     if val is None:
         return None
-    if isinstance(val, float) and (val != val):  # NaN check
+    if isinstance(val, float) and (val != val):  
         return None
     if isinstance(val, np.integer):
         return int(val)
@@ -78,7 +78,7 @@ def load_dimension(parquet_path: str, table: str, conflict_col: str) -> int:
             )
         conn.commit()
     except Exception:
-        conn.rollback()  # FIX: was missing parentheses
+        conn.rollback() 
         raise
     finally:
         conn.close()
@@ -186,7 +186,7 @@ def load_fact(parquet_path: str) -> int:
     df = pd.read_parquet(parquet_path)
 
     if df.empty:
-        logger.warning("No rows found for fact_order")  # FIX: was logger.waning
+        logger.warning("No rows found for fact_order") 
         return 0
 
     conn = connectdb()
@@ -222,7 +222,7 @@ def load_fact(parquet_path: str) -> int:
                 page_size=2000,
             )
 
-            # FIX: was a SELECT — needs to be INSERT INTO fact_order
+       
             cur.execute("""
                 INSERT INTO fact_order (
                     order_id, order_item_id,
@@ -260,9 +260,9 @@ def load_fact(parquet_path: str) -> int:
                     order_status         = EXCLUDED.order_status;
             """)
 
-        conn.commit()  # FIX: was missing
+        conn.commit()
     except Exception:
-        conn.rollback()  # FIX: was conn.rollback without ()
+        conn.rollback() 
         raise
     finally:
         conn.close()
@@ -272,7 +272,7 @@ def load_fact(parquet_path: str) -> int:
 
 
 def main(staging_path: str):
-    started = datetime.now()  # FIX: was missing, caused NameError
+    started = datetime.now()  
 
     load_dimension(f"{staging_path}/dim_location", "dim_location", "zip_code_prefix")
     load_dimension(f"{staging_path}/dim_time",     "dim_time",     "date_key")
