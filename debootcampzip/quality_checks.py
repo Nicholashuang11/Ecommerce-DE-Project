@@ -13,7 +13,7 @@ logger = logging.getLogger("quality_checks")
 
 DB_CONFIG = {
     "host":     os.getenv("POSTGRES_HOST",     "localhost"),
-    "port":     int(os.getenv("POSTGRES_PORT", "5475")),
+    "port":     int(os.getenv("POSTGRES_PORT", "5432")),
     "dbname":   os.getenv("POSTGRES_DB",       "ecommerce_dw"),
     "user":     os.getenv("POSTGRES_USER",     "commerce"),
     "password": os.getenv("POSTGRES_PASSWORD", "commerce"),
