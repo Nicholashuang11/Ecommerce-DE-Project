@@ -1,6 +1,6 @@
 Olist E-Commerce Data Engineering Pipeline
  
-An end-to-end data engineering pipeline built on the [Olist Brazilian E-Commerce dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce). This project simulates a real-world data warehouse pipeline — from raw CSV ingestion to analytics-ready views — using industry-standard tools.
+An end-to-end data engineering pipeline built on the [Olist Brazilian E-Commerce dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce). This project simulates a real-world data warehouse pipeline — from raw CSV ingestion to analytics-ready views.
  
 ---
  
@@ -32,7 +32,7 @@ Raw CSVs (Olist Dataset)
         ▼
   Airflow DAG                pipeline.py
   (orchestrates all          ───────────
-   steps on schedule)        Runs daily at 01:00
+   steps on schedule)        
 ```
  
 ---
