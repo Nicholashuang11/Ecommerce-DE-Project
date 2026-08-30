@@ -1,8 +1,5 @@
 import os
 import sys
-os.environ["PATH"] += r";C:\hadoop\bin"
-os.environ["PYSPARK_PYTHON"] = sys.executable
-os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 import argparse
 import logging
 from pyspark.sql import SparkSession, DataFrame
