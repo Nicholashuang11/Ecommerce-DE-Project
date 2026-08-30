@@ -11,17 +11,9 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
 )
 logger = logging.getLogger("load")
-
-DB_CONFIG = {
-    "host":     os.getenv("POSTGRES_HOST",     "localhost"),
-    "port":     int(os.getenv("POSTGRES_PORT", "5432")),
-    "dbname":   os.getenv("POSTGRES_DB",       "ecommerce_dw"),
-    "user":     os.getenv("POSTGRES_USER",     "commerce"),
-    "password": os.getenv("POSTGRES_PASSWORD", "commerce"),
-}
-
+POSTGRES_CONN_ID = "postgres_ecommerce"
 def connectdb():
-    return psycopg2.connect(**DB_CONFIG)
+    return psycopg2.connect(POSTGRES_CONN_ID)
 import numpy as np
 
 def to_native(val):
