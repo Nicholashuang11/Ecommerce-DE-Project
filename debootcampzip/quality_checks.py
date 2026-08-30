@@ -10,14 +10,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
 )
 logger = logging.getLogger("quality_checks")
-
-DB_CONFIG = {
-    "host":     os.getenv("POSTGRES_HOST",     "localhost"),
-    "port":     int(os.getenv("POSTGRES_PORT", "5432")),
-    "dbname":   os.getenv("POSTGRES_DB",       "ecommerce_dw"),
-    "user":     os.getenv("POSTGRES_USER",     "commerce"),
-    "password": os.getenv("POSTGRES_PASSWORD", "commerce"),
-}
+POSTGRES_CONN_ID = "postgres_ecommerce"
 
 
 CHECKS = [
@@ -57,7 +50,7 @@ CHECKS = [
 
 
 def run_checks() -> bool:
-    conn   = psycopg2.connect(**DB_CONFIG)
+    conn   = psycopg2.connect(postgres_ecommerce)
     failed = []
 
     with conn.cursor() as cur:
