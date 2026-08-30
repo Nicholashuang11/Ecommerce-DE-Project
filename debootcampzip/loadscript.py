@@ -12,8 +12,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger("load")
 POSTGRES_CONN_ID = "postgres_ecommerce"
+POSTGRES_CONN_ID = "postgres_ecommerce"
+hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID) 
+
 def connectdb():
-    return psycopg2.connect(POSTGRES_CONN_ID)
+    return hook.get_conn()
 import numpy as np
 
 def to_native(val):
