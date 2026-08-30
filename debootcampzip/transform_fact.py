@@ -1,10 +1,5 @@
 import os
 import sys
-#os.environ["JAVA_HOME"] = r"C:\Program Files\Eclipse Adoptium\jdk-11.0.30.7-hotspot"
-#os.environ["HADOOP_HOME"] = r"C:\hadoop"
-os.environ["PATH"] += r";C:\hadoop\bin"
-os.environ["PYSPARK_PYTHON"] = sys.executable
-os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 import argparse
 import logging
 from pyspark.sql import SparkSession, DataFrame
