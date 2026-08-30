@@ -9,16 +9,6 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F 
 from pyspark.sql.types import FloatType, IntegerType
 import psycopg2
-conn = psycopg2.connect("dbname=ecommerce_dw user=commerce password=commerce host=localhost port=5475")
-conn.autocommit = True
-cursor = conn.cursor()
-with open('Createtable.sql','r')as f:
-    sql_commands=f.read()
-    cursor.execute(sql_commands)
-conn.commit()
-cursor.close()
-conn.close()
-
 
 logging.basicConfig(
     level=logging.INFO,
