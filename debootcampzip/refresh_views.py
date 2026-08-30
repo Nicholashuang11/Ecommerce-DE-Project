@@ -13,13 +13,12 @@ logger = logging.getLogger("refresh_views")
 
 POSTGRES_CONN_ID = "postgres_ecommerce"
 SQL_PATH = "/opt/airflow/src/analytics_views.sql"
+hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID)
 
 
 def refresh():
     with open(SQL_PATH, "r") as f:
         sql = f.read()
-
-    hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID)
 
     conn = hook.get_conn()
 
