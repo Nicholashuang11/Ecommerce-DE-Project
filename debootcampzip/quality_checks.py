@@ -11,7 +11,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("quality_checks")
 POSTGRES_CONN_ID = "postgres_ecommerce"
-
+hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID) 
 
 CHECKS = [
     ("dim_location has rows",       "SELECT COUNT(*) FROM dim_location",       lambda x: x > 0),
@@ -50,7 +50,7 @@ CHECKS = [
 
 
 def run_checks() -> bool:
-    conn   = psycopg2.connect(postgres_ecommerce)
+    conn = hook.get_conn()
     failed = []
 
     with conn.cursor() as cur:
