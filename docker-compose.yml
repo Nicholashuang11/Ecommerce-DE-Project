@@ -1,0 +1,167 @@
+version: "3.8"
+services:
+
+  airflow-postgres:
+    image: postgres:16
+    container_name: airflow-postgresdsarea
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5478:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+
+  commerce-postgres:
+    image: postgres:16
+    container_name: commerce-postgresdsarea
+    environment:
+      POSTGRES_USER: commerce
+      POSTGRES_PASSWORD: commerce
+      POSTGRES_DB: ecommerce_dw
+    volumes:
+      - commerce-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5475:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "commerce", "-d", "ecommerce_dw"]     
+      interval: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmindsarea
+    depends_on:
+      - airflow-postgres
+      - commerce-postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'True'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+  spark-master:
+    image: apache/spark:3.5.3
+    container_name: spark-master
+    user: root
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+      --host spark-master --port 7077 --webui-port 8080
+    ports:
+      - "7077:7077"  
+      - "8082:8080"   
+    volumes:
+      - ./spark-jobs:/opt/spark-jobs
+      - ./raw_layer:/opt/spark-data/raw_layer
+      - ./bronze_layer:/opt/spark-data/bronze_layer
+      - ./silver_layer:/opt/spark-data/silver_layer
+      - ./gold_layer:/opt/spark-data/gold_layer
+      
+
+  spark-worker:
+    image: apache/spark:3.5.3
+    container_name: spark-worker
+    user: root
+    depends_on:
+      - spark-master
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077 --webui-port 8081
+    environment:
+      SPARK_WORKER_MEMORY: 2g
+      SPARK_WORKER_CORES: 2
+    ports:
+      - "8083:8081"   # spark worker web UI
+    volumes:
+      - ./spark-jobs:/opt/spark-jobs
+      - ./raw_layer:/opt/spark-data/raw_layer
+      - ./bronze_layer:/opt/spark-data/bronze_layer
+      - ./silver_layer:/opt/spark-data/silver_layer
+      - ./gold_layer:/opt/spark-data/gold_layer
+
+
+  airflow-init:
+    image: apache/airflow:3.3.0
+    container_name: airflow-init
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy   
+    environment:
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com"
+    restart: "no"
+
+  airflow-webserver:
+    image: apache/airflow:3.3.0
+    container_name: airflow-webserver
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      spark-master:
+        condition: service_started
+    environment:
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__WEB_SERVER_HOST: 0.0.0.0
+      AIRFLOW__WEBSERVER__WEB_SERVER_PORT: 8080
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./src:/opt/airflow/src          
+      - ./dataset:/opt/airflow/data/olist  
+      - ./staging:/opt/airflow/staging
+      - ./spark-jobs:/opt/spark-jobs
+      - ./raw_layer:/opt/spark-data/raw_layer
+      - ./bronze_layer:/opt/spark-data/bronze_layer
+      - ./silver_layer:/opt/spark-data/silver_layer
+      - ./gold_layer:/opt/spark-data/gold_layer
+
+    ports:
+      - "8081:8080"
+    command: airflow webserver
+    restart: on-failure
+
+  airflow-scheduler:
+    image: apache/airflow:3.3.0
+    container_name: airflow-scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      spark-master:
+        condition: service_started
+    environment:
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./src:/opt/airflow/src          
+      - ./spark-jobs:/opt/spark-jobs
+      - ./raw_layer:/opt/spark-data/raw_layer
+      - ./bronze_layer:/opt/spark-data/bronze_layer
+      - ./silver_layer:/opt/spark-data/silver_layer
+      - ./gold_layer:/opt/spark-data/gold_layer
+
+    command: airflow scheduler
+    restart: on-failure
+
+volumes:
+  airflow-postgres-data:
+  commerce-postgres-data:
+  pgadmin-data:
