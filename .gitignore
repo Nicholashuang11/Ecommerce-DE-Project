@@ -2,7 +2,6 @@ bronze_layer/
 dags/
 logs/
 plugins/
-src/
 silver_layer/
 .env
 Dockerfile
