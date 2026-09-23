@@ -4,9 +4,9 @@ logs/
 plugins/
 silver_layer/
 .env
-Dockerfile
 postgresql-42.7.7.jar
 gold_layer
 transform_dim.py
 transform_fact.py
 requirements.txt
+latiandag

@@ -263,7 +263,7 @@ def main(data_path: str, output_path: str, ingest_date: str, only: str = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--silver-path", required=True)
+    parser.add_argument("--data-path", required=True)
     parser.add_argument("--output-path", required=True)
     parser.add_argument("--ingest-date", required=True)
     parser.add_argument("--only", required=False)

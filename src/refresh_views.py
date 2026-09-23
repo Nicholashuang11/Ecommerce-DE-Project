@@ -1,21 +1,17 @@
 import logging
 import os
+from airflow.hooks.base import BaseHook
 
-import psycopg2
+connectionid= "olistdbid"
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
 )
 logger = logging.getLogger("refresh_views")
+def connectdb(connid):
+    return BaseHook.get_connection(connid)
 
-DB_CONFIG = {
-    "host":     "commerce-postgres",  
-    "port":     5432,                       
-    "dbname":   "ecommerce_dw",
-    "user":     "commerce",
-    "password": "commerce",
-}
 
 SQL_PATH =  "/opt/airflow/src/analytics_views.sql"
 
@@ -25,7 +21,7 @@ def refresh():
     with open(SQL_PATH, "r") as f:
         sql = f.read()
 
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connectdb(connectionid)
     try:
         with conn.cursor() as cur:
             cur.execute(sql)
