@@ -1,0 +1,15 @@
+bronze_layer/
+logs/
+plugins/
+silver_layer/
+.env
+postgresql-42.7.7.jar
+gold_layer/
+transform_dim.py
+transform_fact.py
+requirements.txt
+latiandag/
+dags/*
+!dags/
+!dags/pipeline.py
+**/__pycache__/
