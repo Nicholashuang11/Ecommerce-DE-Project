@@ -222,7 +222,7 @@ def load_fact(parquet_path: str) -> int:
             review_score,
             order_status
         )
-        SELECT
+        SELECT DISTINCT ON (s.order_id, s.order_item_id)
             s.order_id,
             s.order_item_id,
             c.customer_key,
@@ -251,6 +251,7 @@ def load_fact(parquet_path: str) -> int:
             ON cl.zip_code_prefix = s.customer_zip_code_prefix
         LEFT JOIN dim_location sll
             ON sll.zip_code_prefix = s.seller_zip_code_prefix
+        ORDER BY s.order_id, s.order_item_id
         ON CONFLICT (order_id, order_item_id)
         DO UPDATE SET
             customer_location_key = EXCLUDED.customer_location_key,
@@ -319,4 +320,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(args.staging_path)
-

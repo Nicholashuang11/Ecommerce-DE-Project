@@ -1,19 +1,33 @@
+import runpy
+import sys
 from datetime import datetime, timedelta
+
 from airflow.sdk import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
-from airflow.providers.standard.operators.bash import BashOperator
+from airflow.providers.standard.operators.python import PythonOperator
+
 RAW_PATH = "/opt/spark-data/raw_layer"
-BRONZE_PATH   = "/opt/spark-data/bronze_layer"
+BRONZE_PATH = "/opt/spark-data/bronze_layer"
 SILVER_PATH = "/opt/spark-data/silver_layer"
-GOLD_PATH   = "/opt/spark-data/gold_layer"
-SRC_PATH    = "/opt/airflow/src"
+GOLD_PATH = "/opt/spark-data/gold_layer"
+SRC_PATH = "/opt/airflow/src"
+
+
+def run_script(script: str, args: list[str] | None = None):
+    old_argv = sys.argv
+    sys.argv = [script, *(args or [])]
+    try:
+        runpy.run_path(f"{SRC_PATH}/{script}", run_name="__main__")
+    finally:
+        sys.argv = old_argv
+
 
 default_args = {
-    "owner":            "data-engineering",
-    "retries":          1,
-    "retry_delay":      timedelta(minutes=2),
+    "owner": "data-engineering",
+    "retries": 1,
+    "retry_delay": timedelta(minutes=2),
     "email_on_failure": False,
-    "email_on_retry":   False,
+    "email_on_retry": False,
 }
 
 with DAG(
@@ -21,7 +35,7 @@ with DAG(
     description="olist ecommerce pipeline for analytics",
     default_args=default_args,
     schedule="0 1 * * *",
-    start_date=datetime(2026,9,19),
+    start_date=datetime(2026, 9, 19),
     catchup=False,
     tags=["olist", "etl", "data-engineering"],
 ) as dag:
@@ -34,7 +48,7 @@ with DAG(
             "--data-path", RAW_PATH,
             "--output-path", BRONZE_PATH,
             "--ingest-date", "{{ ds }}",
-        ]
+        ],
     )
 
     transform_silver = SparkSubmitOperator(
@@ -55,23 +69,27 @@ with DAG(
         application_args=[
             "--data-path", SILVER_PATH,
             "--output-path", GOLD_PATH,
-            "--ingest-date", "{{ ds }}"
+            "--ingest-date", "{{ ds }}",
         ],
     )
 
-    load_warehouse = BashOperator(
+    load_warehouse = PythonOperator(
         task_id="load_warehouse",
-        bash_command=f"python {SRC_PATH}/loadscript.py --staging-path {GOLD_PATH}",
+        python_callable=run_script,
+        op_kwargs={"script": "loadscript.py", "args": ["--staging-path", GOLD_PATH]},
     )
 
-    quality_checks = BashOperator(
+    quality_checks = PythonOperator(
         task_id="quality_checks",
-        bash_command=f"python {SRC_PATH}/quality_checks.py",
+        python_callable=run_script,
+        op_kwargs={"script": "quality_checks.py"},
     )
 
-    refresh_views = BashOperator(
+    refresh_views = PythonOperator(
         task_id="refresh_analytics_views",
-        bash_command=f"python {SRC_PATH}/refresh_views.py",
+        python_callable=run_script,
+        op_kwargs={"script": "refresh_views.py"},
     )
 
-    transform_bronze >> transform_silver >> transform_gold >> load_warehouse >> quality_checks >> refresh_views
+    #transform_bronze >> transform_silver >> transform_gold >> 
+    load_warehouse >> quality_checks >> refresh_views
