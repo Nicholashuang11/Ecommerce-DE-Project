@@ -1,27 +1,29 @@
 import logging
-import os
-from airflow.hooks.base import BaseHook
 
-connectionid= "olistdbid"
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+connectionid = "olistdbid"
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
 )
 logger = logging.getLogger("refresh_views")
-def connectdb(connid):
-    return BaseHook.get_connection(connid)
 
 
-SQL_PATH =  "/opt/airflow/src/analytics_views.sql"
+def get_postgres_hook():
+    return PostgresHook(postgres_conn_id=connectionid)
 
+
+SQL_PATH = "/opt/airflow/src/analytics_views.sql"
 
 
 def refresh():
     with open(SQL_PATH, "r") as f:
         sql = f.read()
 
-    conn = connectdb(connectionid)
+    hook = get_postgres_hook()
+    conn = hook.get_conn()
     try:
         with conn.cursor() as cur:
             cur.execute(sql)
